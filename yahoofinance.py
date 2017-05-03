@@ -9,51 +9,6 @@ import re
 import datetime
 import requests
 
-def check_get_ticker(ticker,param_dict):
-    '''
-    The ticker symbol string is verified to only contain uppercase letters
-
-    Parameters
-    ----------
-    ticker: a string
-    param_dict: the dictionary that contains the http get request parameters
-
-    Returns
-    -------
-    N/A
-    '''
-
-    regex_match = re.match('^[A-Z]*$',ticker)
-
-    if regex_match is not None:
-        param_dict['s'] = ticker
-
-def check_get_date(date,param_dict,keys):
-    '''
-    The date string format is validated and then mapped to the http get request
-    parameters
-
-    Parameters
-    ----------
-    date: a string
-    param_dict: the dictionary that contains the http get request parameters
-    keys: list of strings; the keys to map each part of the date to
-
-    Returns
-    -------
-    N/A
-    '''
-
-    try:
-        #the date must be formmated as month/day/year
-        dt = datetime.datetime.strptime(date, '%m/%d/%Y')
-    except (ValueError, TypeError):
-        raise ValueError('Date is not properly formatted.')
-
-    param_dict[keys[0]] = str(dt.month-1) #yahoo finance uses zero based months
-    param_dict[keys[1]] = str(dt.day)
-    param_dict[keys[2]] = str(dt.year)
-
 def get_historic_data(ticker,start_date,end_date=None):
     '''
     The ticker symbol, start date, and end date strings are used to construct
@@ -73,7 +28,28 @@ def get_historic_data(ticker,start_date,end_date=None):
 
     base_url = 'http://ichart.finance.yahoo.com/table.csv'
 
-    params = dict()
+    #define local function to check format of ticker symbol
+    def check_get_ticker(ticker,param_dict):
+
+        regex_match = re.match('^[A-Z]*$',ticker)
+
+        if regex_match is not None:
+            param_dict['s'] = ticker
+
+    #define local function to check format of dates
+    def check_get_date(date,param_dict,keys):
+
+        try:
+            #the date must be formmated as month/day/year
+            dt = datetime.datetime.strptime(date, '%m/%d/%Y')
+        except (ValueError, TypeError):
+            raise ValueError('Date is not properly formatted.')
+
+        param_dict[keys[0]] = str(dt.month-1) #yahoo api uses zero based months
+        param_dict[keys[1]] = str(dt.day)
+        param_dict[keys[2]] = str(dt.year)
+
+    params = dict() #http url parameters
 
     #vaidate the input strings and populate the dictionary of parameters
     check_get_ticker(ticker,params)
@@ -118,7 +94,8 @@ def get_historic_dataframe(ticker,start_date,end_date=None):
     #if the return value is not None then it's garunteed to obtain the data
     if text is not None:
 
-        return pd.read_csv(StringIO(text),parse_dates=['Date'],infer_datetime_format=True)
+        return pd.read_csv(StringIO(text),parse_dates=['Date'],
+                infer_datetime_format=True)
 
     else:
 

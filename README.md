@@ -1,2 +1,2 @@
 # pyahoofinance
-A simple python library for obtained Yahoo Finance historic stock data
+A simple python library for obtaining Yahoo Finance historic stock data
